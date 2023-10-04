@@ -1,0 +1,184 @@
+Sub MakeDataSuccinct()
+
+''''''' This is code that an AskBCS person helped me with, below
+WS_Count = ActiveWorkbook.Worksheets.Count
+For II = 1 To WS_Count
+''''''' This is code that an AskBCS person helped me with, above
+
+
+'MsgBox ("You are now on " & ActiveWorkbook.Worksheets(II).Name)
+ActiveWorkbook.Worksheets(II).Activate
+
+'Setting Column headers
+Cells(1, 9).Value = "Ticker"
+Cells(1, 10).Value = "Yearly Change"
+Cells(1, 11).Value = "Percent Change"
+Cells(1, 12).Value = "Total Stock Volume"
+
+
+Cells(1, 15).Value = "Ticker"
+Cells(1, 16).Value = "Value"
+
+'This clears the formatting and contents from the are that the data will go into
+Range("I2:Q3010").ClearContents
+Range("I2:Q3010").ClearFormats
+
+
+'Naming the colums of data in the sheet
+    Dim ticker As String
+    Dim openv As Double
+    Dim high As Double
+    Dim low As Double
+    Dim closingv As Double
+    Dim dayvolume As Double
+
+'Naming columns of data needed for the challenge
+    Dim yearlychange As Double
+    Dim percentchange As Double
+    Dim totalvolume As Double
+
+'these help me be organized
+    Dim numchange As Integer
+    Dim toffset As Integer
+    Dim lastrowA As Long
+
+'Defining the starting values of the named data
+    lastrowA = Cells(Rows.Count, "A").End(xlUp).Row
+    numchange = 0
+    toffset = 0 + numchange
+    totalvolume = 0
+
+For i = 2 To lastrowA
+
+                                'setting up the definitions
+        ticker = Cells(i, 1).Value
+        openv = Cells(i, 3).Value
+        highv = Cells(i, 4).Value
+        lowv = Cells(i, 5).Value
+        closev = Cells(i, 6).Value
+        dayvolume = Cells(i, 7).Value
+        
+                                'This cell's value is a VISUAL ONLY number that represents the numchange value,
+                                            'which is used to offset and create to colums for each ticker entry
+        'Cells(2, 13).Value = numchange
+
+       
+       'This changes an internal number that everything else needs to be based off of
+            'when a new ticker is found
+        If ticker <> Cells(i - 1, 1) Then
+            numchange = numchange + 1
+            Else
+        End If
+        
+        'This inserts a new ticker row when one is found
+            'and inserts the year's opening stock value in the yearly change cells
+        
+        'FIRST INSTANCE OF A TICKER
+        If ticker <> Cells(1, 9).Offset(numchange, 0).Value Then
+                            'Inserts a new ticker name in the Ticker Column
+            Cells(1, 9).Offset(numchange, 0).Value = ticker
+                            'Sets the Yearly Change cell up for a later calculation
+            Cells(1, 10).Offset(numchange, 0).Value = openv
+                            'Dumps this value into an unused cell for later Yearly Percentage calculation
+            Cells(1, 25).Offset(numchange, 0).Value = openv
+            Else
+        End If
+        
+        'LAST INSTANCE OF A TICKER
+        If ticker <> Cells(i + 1, 1) Then
+                            'Calculates the yearly NUMERICAL change of a specific stock
+            Cells(1, 10).Offset(numchange, 0).Value = Cells(1, 10).Offset(numchange, 0).Value - closev
+            Cells(1, 10).Offset(numchange, 0).Value = Cells(1, 10).Offset(numchange, 0).Value * -1
+            
+                            'Calculates the yearly PERCENTAGE change of a specific stock
+            Cells(1, 26).Offset(numchange, 0).Value = closev
+            Cells(1, 11).Offset(numchange, 0).Value = Cells(1, 26).Offset(numchange, 0).Value - Cells(1, 25).Offset(numchange, 0).Value
+            Cells(1, 11).Offset(numchange, 0).Value = Cells(1, 11).Offset(numchange, 0).Value / Cells(1, 25).Offset(numchange, 0).Value
+            'Cells(1, 11).Offset(numchange, 0).Value = Cells(1, 11).Offset(numchange, 0).Value * -1
+                            'Changes the formatting to display the proper % format on the sheet
+            Cells(1, 11).Offset(numchange, 0).NumberFormat = "0.00%"
+            Else
+        End If
+        
+        'Changes the COLORS of the cells so that they display negative (red) or positive (green) changes
+        If Cells(1, 10).Offset(numchange, 0).Value > 0 Then
+            Cells(1, 10).Offset(numchange, 0).Interior.ColorIndex = 4
+            Else
+            Cells(1, 10).Offset(numchange, 0).Interior.ColorIndex = 3
+        End If
+        
+                            'Checks the ticker cells against each other and then adds each daily value to each other...
+                                'until the next ticker comes along
+        If ticker = Cells(1, 9).Offset(numchange, 0).Value Then
+            Cells(1, 12).Offset(numchange, 0).Value = Cells(1, 12).Offset(numchange, 0).Value + dayvolume
+            Else
+        End If
+ 
+    Next i
+    
+ 'here is where I do the second part of the challenge
+    
+    Dim maxPercent As Double
+    Dim minPercent As Double
+    Dim maxVolume As Double
+    Dim lastrowK As Long
+    lastrowK = Cells(Rows.Count, "K").End(xlUp).Row
+    
+    Range("N2:Q4").ClearContents
+    Range("N2:Q4").ClearFormats
+    Cells(2, 14) = "Greatest % Increase"
+    Cells(3, 14) = "Greatest % Decrease"
+    Cells(4, 14) = "Greatest Total Volume"
+    
+    For i = 2 To lastrowK
+    
+        'Sets greatest value cell
+        If Cells(i, 11).Value > Cells(2, 16).Value Then
+            maxPercent = Cells(i, 11).Value
+            Cells(2, 16).Value = maxPercent
+            Cells(2, 16).NumberFormat = "0.00%"
+            End If
+            
+            'Find the ticker associated with the greatest value
+            If Cells(i, 11).Value = maxPercent Then
+                Cells(2, 15).Value = Cells(i, 11).Offset(0, -2).Value
+            End If
+        
+        'Sets the lowest value cell
+        If Cells(i, 11).Value < Cells(3, 16).Value Then
+            minPercent = Cells(i, 11).Value
+            Cells(3, 16).Value = minPercent
+            Cells(3, 16).NumberFormat = "0.00%"
+        End If
+        
+            'Finds the ticker associated with the lowest value
+            If Cells(i, 11).Value = minPercent Then
+                Cells(3, 15).Value = Cells(i, 11).Offset(0, -2).Value
+            End If
+            
+        'Sets the hightest volume value cell
+        If Cells(i, 12).Value > Cells(4, 16).Value Then
+            maxVolume = Cells(i, 12).Value
+            Cells(4, 16).Value = maxVolume
+        End If
+        
+            'Finds the ticker associated with the lowest value
+            If Cells(i, 12).Value = maxVolume Then
+                Cells(4, 15).Value = Cells(i, 12).Offset(0, -3).Value
+            End If
+        
+    Next i
+    
+    Columns("I:P").Select
+
+    Columns("I:P").EntireColumn.AutoFit
+    
+    Range("Y1:Z3010").ClearContents
+    'Range("I2:Q3010").ClearContents
+   
+   '''''' This is code that an AskBCS person helped me with, below
+   Next II
+   '''''' This is code that an AskBCS person helped me with, Above
+    End Sub
+
+
